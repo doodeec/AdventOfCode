@@ -3,7 +3,7 @@
  */
 package adventofcode1
 
-class App {
+class Day01 {
     fun run() {
         val resourceName = "input.txt"
 
@@ -113,5 +113,5 @@ class App {
 }
 
 fun main() {
-    App().run()
+    Day01().run()
 }
