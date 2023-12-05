@@ -16,7 +16,6 @@ class Day05 {
 
         val input = getResourceAsStringCollection("day05_input.txt")
         val result = getLowestLocation(input)
-        if (result != 346433842L) throw Exception("not passing")
 
         println("part 1 result - $result")
     }
