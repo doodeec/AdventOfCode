@@ -3,95 +3,71 @@
  */
 package adventofcode
 
+import kotlin.math.abs
+
 class Day02 {
 
-    private val maxValues = mapOf(
-        "red" to 12,
-        "green" to 13,
-        "blue" to 14,
-    )
+    fun part1() {
+        println("=== Part 1 ===")
+        val testInput = getResourceAsStringCollection("day02_test.txt")
+        val testResult = getPart1(testInput)
+        println("test result - $testResult")
+        if (testResult != 2) throw Exception("example 1 not passing")
 
-    fun run() {
-        //val resourceName = "day02_test.txt"
-        val resourceName = "day02_input.txt"
-
-        val input = this::class.java.classLoader.getResourceAsStream(resourceName)
-            ?.bufferedReader()
-            ?.readLines()
-            ?: emptyList()
-
-        // part 1
-        /*val result = input
-            .filter { it.validateGame() }
-            .mapNotNull { it.getGameId() }
-            .sum()*/
-        
-        // part 2
-        val result = input
-            .asSequence()
-            .map { it.getGamePower() }
-            .sum()
-
+        val input = getResourceAsStringCollection("day02_input.txt")
+        val result = getPart1(input)
         println("result - $result")
     }
 
-    private fun String.validateGame(): Boolean {
-        return this.split(":", ";")
-            // lose game name
-            .drop(1)
-            //.also { println("draws - $it") }
-            .all { it.validateDraw() }
+    fun part2() {
+        println("=== Part 2 ===")
+        val testInput = getResourceAsStringCollection("day02_test.txt")
+        val testResult = getPart2(testInput)
+        println("test result - $testResult")
+        if (testResult != 4) throw Exception("example 2 not passing")
+
+        val input = getResourceAsStringCollection("day02_input.txt")
+        val result = getPart2(input)
+        println("result - $result")
     }
 
-    private fun String.validateDraw(): Boolean {
-        val cubes = this.split(",").map { it.trim() }
+    private fun getPart1(input: List<String>): Int {
+        return input.count { line ->
+            line.split("\\s+".toRegex())
+                .map { it.toInt() }
+                .isSafe()
+        }
+    }
 
-        cubes.forEach { c ->
-            val count = c.filter { it.isDigit() }.toIntOrNull() ?: 0
-            val color = c.filter { it.isLetter() }
+    private fun getPart2(input: List<String>): Int {
+        return input.count { line ->
+            val levels = line.split("\\s+".toRegex()).map { it.toInt() }
+            if (levels.isSafe()) return@count true
 
-            //println("validateDraw $count $color")
-
-            if (maxValues.containsKey(color)) {
-                if (maxValues[color]!! < count) return false
+            levels.indices.forEach { index ->
+                if (levels.toMutableList().apply { removeAt(index) }.isSafe()) return@count true
             }
+
+            return@count false
+        }
+    }
+
+    private fun List<Int>.isSafe(): Boolean {
+        val isIncr = this == this.sorted()
+        val isDecr = this == this.sorted().reversed()
+
+        if (isIncr || isDecr) {
+            val isDiffOk = windowed(2).all { abs(it[0] - it[1]) in 1..3 }
+            return isDiffOk
         }
 
-        return true
+        return false
     }
-    
-    private fun String.getGamePower(): Int {
-        val minPower = mutableMapOf(
-            "red" to 0,
-            "green" to 0,
-            "blue" to 0
-        )
-        
-        this.split(":", ";")
-            // lose game name
-            .drop(1)
-            .forEach { draw ->
-                draw.split(",").forEach { c ->
-                    val count = c.filter { it.isDigit() }.toIntOrNull() ?: 0
-                    val color = c.filter { it.isLetter() }
-                    
-                    if (minPower.containsKey(color)) {
-                        if (minPower[color]!! < count) minPower[color] = count
-                    }
-                }
-                
-            }
-        
-        return minPower["red"]!! * minPower["green"]!! * minPower["blue"]!!
-    }
-
-    private fun String.getGameId(): Int? = this
-        .takeWhile { it != ':' }
-        .filter { it.isDigit() }
-        //.also { println("gameId - $it") }
-        .toIntOrNull()
 }
 
 fun main() {
-    Day02().run()
+    Day02().apply {
+        part1()
+        part2()
+    }
 }

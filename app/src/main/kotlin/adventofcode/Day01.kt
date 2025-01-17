@@ -3,115 +3,78 @@
  */
 package adventofcode
 
+import kotlin.math.abs
+
 class Day01 {
-    fun run() {
-        val resourceName = "day01_input.txt"
 
-        val input = this::class.java.classLoader.getResourceAsStream(resourceName)
-            ?.bufferedReader()
-            ?.readLines()
-            ?: emptyList()
+    fun part1() {
+        println("=== Part 1 ===")
+        val testInput = getResourceAsStringCollection("day01_test.txt")
+        val testResult = getPart1(testInput)
+        println("test result - $testResult")
+        if (testResult != 11) throw Exception("example 1 not passing")
 
-        //val result = sumLinesByDigits(input)
-        val result = sumLinesByDigitsAndTextDigits(input)
+        val input = getResourceAsStringCollection("day01_input.txt")
+        val result = getPart1(input)
         println("result - $result")
     }
 
-    /**
-     * Part 1
-     */
-    private fun sumLinesByDigits(input: List<String>): Int {
-        return input
-            .asSequence()
-            .map { line -> line.countCombinedNumbers() }
-            .sum()
+    fun part2() {
+        println("=== Part 2 ===")
+        val testInput = getResourceAsStringCollection("day01_test.txt")
+        val testResult = getPart2(testInput)
+        println("test result - $testResult")
+        if (testResult != 31) throw Exception("example 2 not passing")
+
+        val input = getResourceAsStringCollection("day01_input.txt")
+        val result = getPart2(input)
+        println("result - $result")
     }
 
-    /**
-     * Part 2
-     */
-    private fun sumLinesByDigitsAndTextDigits(input: List<String>): Int {
-        return input
-            .asSequence()
-            .map { line ->
-                val result = line.getLineCount()
-                println("$line - $result")
-                return@map result
-            }
-            .sum()
-    }
+    private fun getPart1(input: List<String>): Int {
+        val left = mutableListOf<Int>()
+        val right = mutableListOf<Int>()
 
-    private fun String.countCombinedNumbers(): Int {
-        val firstDigit = firstOrNull { it.isDigit() }?.digitToInt()
-        if (firstDigit == null) return 0
-
-        val lastDigit = lastOrNull { it.isDigit() }?.digitToInt()
-        if (lastDigit == null) return 0
-
-        return firstDigit * 10 + lastDigit
-    }
-
-    private val textToDigitMap = mapOf(
-        "one" to "1",
-        "two" to "2",
-        "three" to "3",
-        "four" to "4",
-        "five" to "5",
-        "six" to "6",
-        "seven" to "7",
-        "eight" to "8",
-        "nine" to "9"
-    )
-    
-    private val textNumberRegex = "(${textToDigitMap.keys.joinToString(separator = "|")})".toRegex()
-    
-    private fun String.getLineCount(): Int {
-        val first = getFirstNumber()
-        if (first == 0) return 0
-        
-        val last = getLastNumber()
-        if (last == 0) return 0
-        
-        return first * 10 + last
-    }
-    
-    private fun String.getFirstNumber(): Int {
-        var i = 0
-        var test = ""
-        while (i < length) {
-            val x = this[i]
-            if (x.isDigit()) return x.digitToInt()
-            
-            test += x
-            //println("test '$test'")
-            val match = textNumberRegex.find(test)
-            if (match != null) return textToDigitMap[match.value]!!.toInt()
-            
-            i++
-        }
-        
-        return 0
-    }
-    
-    private fun String.getLastNumber(): Int {
-        var i = length - 1
-        var test = ""
-        while (i >= 0) {
-            val x = this[i]
-            if (x.isDigit()) return x.digitToInt()
-
-            test = x + test
-            //println("test '$test'")
-            val match = textNumberRegex.find(test)
-            if (match != null) return textToDigitMap[match.value]!!.toInt()
-
-            i--
+        input.forEach { line ->
+            val parts = line.split("\\s+".toRegex())
+            left.add(parts[0].toInt())
+            right.add(parts[1].toInt())
         }
 
-        return 0
+        left.sort()
+        right.sort()
+        assert(left.size == right.size)
+
+        var result = 0
+        left.forEachIndexed { index, i ->
+            result += abs(i - right[index])
+        }
+        return result
+    }
+
+    private fun getPart2(input: List<String>): Int {
+        val left = mutableListOf<Int>()
+        val right = mutableListOf<Int>()
+
+        input.forEach { line ->
+            val parts = line.split("\\s+".toRegex())
+            left.add(parts[0].toInt())
+            right.add(parts[1].toInt())
+        }
+
+        assert(left.size == right.size)
+
+        var result = 0
+        left.forEach { i ->
+            result += i * right.count { it == i }
+        }
+        return result
     }
 }
 
 fun main() {
-    Day01().run()
+    Day01().apply {
+        part1()
+        part2()
+    }
 }
