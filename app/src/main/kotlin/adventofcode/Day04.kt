@@ -3,87 +3,96 @@
  */
 package adventofcode
 
-import kotlin.math.pow
-
 class Day04 {
 
+    companion object {
+        private const val RESOURCE_BASENAME = "day04"
+        private const val RESOURCE_TEST = "${RESOURCE_BASENAME}_test.txt"
+        private const val RESOURCE_INPUT = "${RESOURCE_BASENAME}_input.txt"
+    }
+
     fun part1() {
-        val testInput = getResourceAsStringCollection("day04_test.txt")
-        val testResult = calculateSum(testInput)
-        
-        if (testResult != 13) throw Exception("example not passing")
+        println("=== Part 1 ===")
+        val testInput = getResourceAsStringCollection(RESOURCE_TEST)
+        val testResult = getPart1(testInput)
+        println("test result - $testResult")
+        if (testResult != 18) throw Exception("example 1 not passing")
 
-        val input = getResourceAsStringCollection("day04_input.txt")
-        val result = calculateSum(input)
-
-
-        println("part 1 result - $result")
+        val input = getResourceAsStringCollection(RESOURCE_INPUT)
+        val result = getPart1(input)
+        println("result - $result")
     }
 
     fun part2() {
-        val testInput = getResourceAsStringCollection("day04_test.txt")
-        val testResult = calculateSum2(testInput)
-
+        println("=== Part 2 ===")
+        val testInput = getResourceAsStringCollection(RESOURCE_TEST)
+        val testResult = getPart2(testInput)
         println("test result - $testResult")
-        if (testResult != 30) throw Exception("example not passing")
+        if (testResult != 9) throw Exception("example 2 not passing")
 
-        val input = getResourceAsStringCollection("day04_input.txt")
-        val result = calculateSum2(input)
-
-
-        println("part 2 result - $result")
+        val input = getResourceAsStringCollection(RESOURCE_INPUT)
+        val result = getPart2(input)
+        println("result - $result")
     }
 
-    private fun calculateSum(input: List<String>): Int {
-        return input.sumOf { line ->
-            val numbers = line.substringAfter(":")
+    private fun getPart1(input: List<String>): Int {
+        val regex = "XMAS".toRegex()
 
-            val winning = numbers.substringBefore("|").trim()
-                .split("\\s+".toRegex()).distinct()
-            val my = numbers.substringAfter("|").trim()
-                .split("\\s+".toRegex()).distinct()
-
-            var power: Int = 0
-            my.forEach { if (winning.contains(it)) power++ }
-            val myWin = my.filter { winning.contains(it) }
-
-            if (power > 0) 2.toDouble().pow(power - 1).toInt() else 0
-        }
-    }
-
-    private fun calculateSum2(input: List<String>): Int {
-        val cardCounts = mutableMapOf<Int, Int>()
-
-        val cards = input.map { line ->
-            CardInfo(
-                id = line.substringBefore(":").filter { it.isDigit() }.toInt(),
-                winning = line.substringAfter(":").substringBefore("|").trim().split("\\s+".toRegex()).distinct(),
-                my = line.substringAfter(":").substringAfter("|").trim().split("\\s+".toRegex()).distinct(),
-            )
+        var result = 0
+        // horizontal search
+        input.forEach { line ->
+            val natural = regex.findAll(line).count()
+            val reversed = regex.findAll(line.reversed()).count()
+            result += natural
+            result += reversed
         }
 
-        cards.forEach { card ->
-            val num = cardCounts.getOrPut(card.id) { 0 }
-            val newNum = num + 1
-            cardCounts[card.id] = newNum
-            
-            if (card.winningCount > 0) {
-                (card.id + 1..card.id+card.winningCount).forEach {
-                    cardCounts[it] = cardCounts.getOrDefault(it, 0) + newNum
-                }
+        input.windowed(4) { win ->
+            val lineLength = win.first().length
+
+            // vertical search
+            (0..<lineLength).forEach { index ->
+                val word = "${win[0][index]}${win[1][index]}${win[2][index]}${win[3][index]}"
+                if (regex.matches(word)) result++
+                if (regex.matches(word.reversed())) result++
+            }
+
+            // diagonal search LT-RB
+            (0..<lineLength-3).forEach { index ->
+                val word = "${win[0][index]}${win[1][index+1]}${win[2][index+2]}${win[3][index+3]}"
+                if (regex.matches(word)) result++
+                if (regex.matches(word.reversed())) result++
+            }
+
+            // diagonal search LB-RT
+            (3..<lineLength).forEach { index ->
+                val word = "${win[3][index-3]}${win[2][index-2]}${win[1][index-1]}${win[0][index]}"
+                if (regex.matches(word)) result++
+                if (regex.matches(word.reversed())) result++
             }
         }
-
-        return cardCounts.values.sum()
+        return result
     }
 
-    data class CardInfo(
-        val id: Int,
-        val winning: List<String>,
-        val my: List<String>,
-    ) {
-        val winningCount: Int = my.count { winning.contains(it) }
+    private fun getPart2(input: List<String>): Int {
+        var result = 0
+        input.windowed(3).forEach { lines ->
+            val lineLength = lines.first().length
+
+            (1..lineLength-2).forEach { index ->
+                if (lines.getLTRBWordAt(index).isMas() && lines.getLBRTWordAt(index).isMas()) result++
+            }
+        }
+        return result
     }
+
+    private fun List<String>.getLTRBWordAt(index: Int): String =
+        "${this[0][index-1]}${this[1][index]}${this[2][index+1]}"
+
+    private fun List<String>.getLBRTWordAt(index: Int): String =
+        "${this[2][index-1]}${this[1][index]}${this[0][index+1]}"
+
+    private fun String.isMas(): Boolean = this == "MAS" || this == "SAM"
 }
 
 fun main() {

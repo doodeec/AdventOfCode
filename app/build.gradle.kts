@@ -8,7 +8,7 @@
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.6.21"
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -38,5 +38,5 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass.set("adventofcode1.AppKt")
+    mainClass.set("adventofcode_2024.AppKt")
 }

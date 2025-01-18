@@ -5,99 +5,97 @@ package adventofcode
 
 class Day03 {
 
+    companion object {
+        private val RESOURCE_BASENAME = "day03"
+        private val RESOURCE_TEST = "${RESOURCE_BASENAME}_test.txt"
+        private val RESOURCE_INPUT = "${RESOURCE_BASENAME}_input.txt"
+    }
+
     fun part1() {
-        val testInput = getResourceAsStringCollection("day03_test.txt")
-        val testResult = calculateSum(testInput)
+        println("=== Part 1 ===")
+        val testInput = getResourceAsStringCollection(RESOURCE_TEST)
+        val testResult = getPart1(testInput)
+        println("test result - $testResult")
+        if (testResult != 161) throw Exception("example 1 not passing")
 
-        assert(testResult == 4361) { "example not passing" }
-
-        val input = getResourceAsStringCollection("day03_input.txt")
-        val result = calculateSum(input)
-
+        val input = getResourceAsStringCollection(RESOURCE_INPUT)
+        val result = getPart1(input)
         println("result - $result")
     }
 
     fun part2() {
-        val testInput = getResourceAsStringCollection("day03_test.txt")
-        val testResult = calculateGearRatio(testInput)
+        println("=== Part 2 ===")
+        val testInput = getResourceAsStringCollection(RESOURCE_TEST)
+        val testResult = getPart2(testInput)
+        println("test result - $testResult")
+        if (testResult != 48) throw Exception("example 2 not passing")
 
-        assert(testResult == 467835) { "example not passing" }
-
-        val input = getResourceAsStringCollection("day03_input.txt")
-        val result = calculateGearRatio(input)
-
+        val input = getResourceAsStringCollection(RESOURCE_INPUT)
+        val result = getPart2(input)
         println("result - $result")
     }
 
-    private val numberRegex = "[0-9]+".toRegex()
+    private fun getPart1(input: List<String>): Int {
+        val regex = "mul\\([0-9]{1,3},[0-9]{1,3}\\)".toRegex()
 
-    private fun calculateSum(input: List<String>): Int {
-        //transform into intrange(indices) collection
-        val indices = input.map { line ->
-            LineData(
-                symbolData = line.findSymbolIndices(),
-                numericData = numberRegex.findAll(line).map {
-                    IndexData(it.value.toInt(), IntRange(it.range.first - 1, it.range.last + 1))
-                }.toList(),
-            )
+        val instructions = input.flatMap { line -> regex.findAll(line).map { it.value } }
+
+        var result = 0
+        instructions.forEach { i ->
+            val numbers = i.substringAfter("mul(").substringBefore(")").split(",")
+            val x = numbers[0].toInt() * numbers[1].toInt()
+            result += x
+        }
+        return result
+    }
+
+    private fun getPart2(input: List<String>): Int {
+        val instructionRegex = "mul\\([0-9]{1,3},[0-9]{1,3}\\)".toRegex()
+
+        var read = true
+        var word: String
+        val buffer = StringBuffer()
+
+        input.forEach { line ->
+            word = line
+            while (word.isNotEmpty()) {
+                if (read) {
+                    val i = word.indexOf("don't()")
+                    if (i != -1) {
+                        buffer.append(word.substring(0, i))
+                        word = word.substring(i)
+                        read = false
+                    } else {
+                        buffer.append(word)
+                        word = ""
+                    }
+                } else {
+                    val i = word.indexOf("do()")
+                    if (i != -1) {
+                        word = word.substring(i)
+                        read = true
+                    } else {
+                        word = ""
+                    }
+                }
+            }
         }
 
-        return indices
-            .flatMapIndexed { index: Int, lineData: LineData ->
-                val controlTop = indices.getOrNull(index - 1)?.symbolData.orEmpty()
-                val controlSelf = lineData.symbolData
-                val controlBottom = indices.getOrNull(index + 1)?.symbolData.orEmpty()
+        var result = 0
+        val instructions = instructionRegex.findAll(buffer).map { it.value }
+        instructions.forEach { i ->
+            val numbers = i.substringAfter("mul(").substringBefore(")").split(",")
+            val x = numbers[0].toInt() * numbers[1].toInt()
+            result += x
+        }
 
-                lineData.numericData
-                    .filter { nd ->
-                        controlTop.any { it in nd.range } ||
-                                controlSelf.any { it in nd.range } ||
-                                controlBottom.any { it in nd.range }
-                    }
-                    .map { it.value }
-            }
-            .sum()
+        return result
     }
-
-    private fun String.findSymbolIndices(): List<Int> =
-        mapIndexedNotNull { index, c -> if (!c.isDigit() && c != '.') index else null }
-
-    data class LineData(
-        val symbolData: List<Int>,
-        val numericData: List<IndexData>
-    )
-
-    data class IndexData(
-        val value: Int,
-        val range: IntRange,
-    )
-
-    private fun calculateGearRatio(input: List<String>): Int {
-        return input.windowed(size = 3).map { lines ->
-            val top = lines[0]
-            val self = lines[1]
-            val bottom = lines[2]
-
-             self.findGearIndices().mapNotNull { gi ->
-                val gn = top.findGearNumbers(gi) + self.findGearNumbers(gi) + bottom.findGearNumbers(gi)
-                gn.takeIf { it.size == 2 }?.fold(1) { x, y -> x * y }
-            }.sum()
-        }.sum()
-    }
-
-    private fun String.findGearIndices(): List<Int> =
-        mapIndexedNotNull { index, c -> if (c == '*') index else null }
-
-    private fun String.findGearNumbers(gearIndex: Int): List<Int> =
-        numberRegex.findAll(this)
-            .mapNotNull { mr ->
-                if (gearIndex in IntRange(mr.range.first - 1, mr.range.last + 1)) mr.value.toInt()
-                else null
-            }
-            .toList()
 }
 
 fun main() {
-    //Day03().part1()
-    Day03().part2()
+    Day03().apply {
+        part1()
+        part2()
+    }
 }
