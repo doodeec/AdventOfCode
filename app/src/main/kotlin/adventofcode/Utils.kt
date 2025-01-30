@@ -5,3 +5,9 @@ fun getResourceAsStringCollection(resourceName: String) =
             ?.bufferedReader()
             ?.readLines()
             ?: emptyList()
+
+fun String.splitToWords(): List<String> =
+    this.split(" ")
+
+fun String.splitToDigits(): List<Int> =
+    this.split(" ").map { c -> c.toInt() }
