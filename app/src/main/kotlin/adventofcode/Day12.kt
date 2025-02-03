@@ -32,13 +32,30 @@ class Day12 {
     }
 
     fun part2() {
+        println("=== Part 2 ===")
+        val input1 = getResourceAsStringCollection("${RESOURCE_BASENAME}_test.txt")
+        val result1 = input1.calculateDiscountPrice()
+        println("test result 1 - $result1")
+        if (result1 != 80) throw Exception("example 1 not passing")
+
+        val input2 = getResourceAsStringCollection("${RESOURCE_BASENAME}_test2.txt")
+        val result2 = input2.calculateDiscountPrice()
+        println("test result 2 - $result2")
+        if (result2 != 436) throw Exception("example 2 not passing")
+
+        val input3 = getResourceAsStringCollection("${RESOURCE_BASENAME}_test3.txt")
+        val result3 = input3.calculateDiscountPrice()
+        println("test result 3 - $result3")
+        if (result3 != 1206) throw Exception("example 3 not passing")
+
+        val input = getResourceAsStringCollection(RESOURCE_INPUT)
+        val result = input.calculateDiscountPrice()
+        println("result - $result")
     }
 
-    private fun List<String>.calculatePrice(): Int {
-        val regions = this.toRegions()
-//        println("regions $regions")
-        return regions.sumOf { it.price() }
-    }
+    private fun List<String>.calculatePrice(): Int = toRegions().sumOf { it.price() }
+
+    private fun List<String>.calculateDiscountPrice(): Int = toRegions().sumOf { it.discountPrice() }
 
     private fun List<String>.toRegions(): List<Region> {
         val result = mutableListOf<Region>()
@@ -116,11 +133,47 @@ class Day12 {
             return total
         }
 
+        private fun edges(): Int {
+            var total = 0
+            plots.forEach { p ->
+                // top-left
+                if (!hasPlotAt(p.row - 1, p.col) && !hasPlotAt(p.row, p.col - 1)) total++
+                // bottom-left
+                if (!hasPlotAt(p.row + 1, p.col) && !hasPlotAt(p.row, p.col - 1)) total++
+                // top-right
+                if (!hasPlotAt(p.row - 1, p.col) && !hasPlotAt(p.row, p.col + 1)) total++
+                // bottom-right
+                if (!hasPlotAt(p.row + 1, p.col) && !hasPlotAt(p.row, p.col + 1)) total++
+
+                // inner |_
+                //
+                if (hasPlotAt(p.row - 1, p.col) && hasPlotAt(p.row, p.col + 1) && !hasPlotAt(p.row - 1, p.col + 1)) total++
+                // inner _|
+                //
+                if (hasPlotAt(p.row - 1, p.col) && hasPlotAt(p.row, p.col - 1) && !hasPlotAt(p.row - 1, p.col - 1)) total++
+                // inner _
+                //        |
+                if (hasPlotAt(p.row + 1, p.col) && hasPlotAt(p.row, p.col - 1) && !hasPlotAt(p.row + 1, p.col - 1)) total++
+                // inner   _
+                //        |
+                if (hasPlotAt(p.row + 1, p.col) && hasPlotAt(p.row, p.col + 1) && !hasPlotAt(p.row + 1, p.col + 1)) total++
+            }
+            return total
+        }
+
         fun price(): Int {
             val peri = perimeter()
             val count = plots.size
             val price = peri * count
 //            println("$id/$plant:perimeter=$peri, plots=${count}, price=$price")
+            return price
+        }
+
+        fun discountPrice(): Int {
+            val edges = edges()
+            val count = plots.size
+            val price = edges * count
+//            println("$id/$plant:edges=$edges, plots=${count}, price=$price")
             return price
         }
 
